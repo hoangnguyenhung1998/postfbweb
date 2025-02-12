@@ -10,8 +10,8 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecret")
 
 # 📌 Facebook OAuth Config
-FACEBOOK_APP_ID = "368071329574290"
-FACEBOOK_APP_SECRET = "e7683ec15d978112c6c81910b76f8e31"
+FACEBOOK_APP_ID = "YOUR_FACEBOOK_APP_ID"
+FACEBOOK_APP_SECRET = "YOUR_FACEBOOK_APP_SECRET"
 REDIRECT_URI = "https://your-app.onrender.com/facebook_callback"
 
 UPLOAD_FOLDER = "uploads"

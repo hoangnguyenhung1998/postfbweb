@@ -34,6 +34,7 @@ def login():
     fb_auth_url = (
         f"https://www.facebook.com/v18.0/dialog/oauth?"
         f"client_id={FACEBOOK_APP_ID}&redirect_uri={REDIRECT_URI}&scope=pages_show_list,pages_manage_posts"
+        # f"client_id={FACEBOOK_APP_ID}&redirect_uri={REDIRECT_URI}&scope=pages_show_list,pages_manage_posts"
     )
     return redirect(fb_auth_url)
 

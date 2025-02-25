@@ -96,6 +96,18 @@ def select_page():
 
     return render_template("select_page.html", pages=pages)
 
+from flask import request
+
+@app.route("/confirm_page", methods=["POST"])
+def confirm_page():
+    page_id = request.form.get("page_id")
+    if not page_id:
+        return "❌ Bạn chưa chọn Page!", 400
+
+    session["page_id"] = page_id  # Lưu Page ID vào session
+    return redirect(url_for("upload_page"))  # Chuyển sang trang upload file Excel
+
+
 #upload page
 
 @app.route("/upload_page", methods=["GET", "POST"])

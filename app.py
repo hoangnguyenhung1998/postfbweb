@@ -77,7 +77,6 @@ def dashboard():
     return render_template("dashboard.html", pages=pages)
 
 #chọn page
-
 @app.route("/select_page", methods=["GET", "POST"])
 def select_page():
     if "access_token" not in session:
@@ -90,22 +89,17 @@ def select_page():
     pages = response.json().get("data", [])
 
     if request.method == "POST":
-        session["selected_page_id"] = request.form["page_id"]
-        session["selected_page_name"] = request.form["page_name"]
-        return redirect(url_for("upload_page"))
+        session["selected_page_id"] = request.form.get("page_id")
+        session["selected_page_name"] = request.form.get("page_name")
+
+        if not session["selected_page_id"]:
+            flash("⚠️ Bạn chưa chọn Page!", "danger")
+            return redirect(url_for("select_page"))
+
+        return redirect(url_for("upload_page"))  # 👉 Chuyển sang upload file
 
     return render_template("select_page.html", pages=pages)
 
-from flask import request
-
-@app.route("/confirm_page", methods=["POST"])
-def confirm_page():
-    page_id = request.form.get("page_id")
-    if not page_id:
-        return "❌ Bạn chưa chọn Page!", 400
-
-    session["page_id"] = page_id  # Lưu Page ID vào session
-    return redirect(url_for("upload_page"))  # Chuyển sang trang upload file Excel
 
 
 #upload page
@@ -115,8 +109,8 @@ def upload_page():
     if "selected_page_id" not in session:
         return redirect(url_for("select_page"))
 
-    return render_template("upload.html", page_name=session["selected_page_name"])
-
+    page_name = session.get("selected_page_name", "Trang chưa xác định")
+    return render_template("upload.html", page_name=page_name)
 
 # 📌 Xử lý Upload File Excel
 process_message = "Chưa có tiến trình nào"

@@ -5,14 +5,14 @@
 </head>
 <body>
     <h2>Chọn Trang Facebook để đăng bài</h2>
-    <form method="POST">
-        <label for="page_id">Chọn Page:</label>
-        <select name="page_id" required>
+    <form method="POST" action="{{ url_for('select_page') }}">
+        <label for="page_id">Chọn Trang:</label>
+        <select name="page_id" id="page_id" required>
             {% for page in pages %}
                 <option value="{{ page.id }}">{{ page.name }}</option>
             {% endfor %}
         </select>
         <button type="submit">Tiếp tục</button>
-    </form>
+    </form>    
 </body>
 </html>

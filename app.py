@@ -33,10 +33,11 @@ def index():
 def login():
     fb_auth_url = (
         f"https://www.facebook.com/v18.0/dialog/oauth?"
-        f"client_id={FACEBOOK_APP_ID}&redirect_uri={REDIRECT_URI}&scope=pages_show_list,pages_manage_posts,public_profile"
-        # f"client_id={FACEBOOK_APP_ID}&redirect_uri={REDIRECT_URI}&scope=pages_show_list,pages_manage_posts"
+        f"client_id={FACEBOOK_APP_ID}&redirect_uri={REDIRECT_URI}"
+        f"&scope=pages_show_list,pages_manage_posts,public_profile,pages_manage_video"
     )
     return redirect(fb_auth_url)
+
 
 # 📌 Xử lý đăng nhập Facebook
 @app.route("/facebook_callback")
@@ -103,18 +104,17 @@ def select_page():
 
 
 #upload page
-
 @app.route("/upload_page", methods=["GET", "POST"])
 def upload_page():
     if "selected_page_id" not in session:
         return redirect(url_for("select_page"))
 
-    page_name = session.get("selected_page_name", "Trang chưa xác định")
+    page_name = session.get("selected_page_name", "Không xác định")
     return render_template("upload.html", page_name=page_name)
+
 
 # 📌 Xử lý Upload File Excel
 process_message = "Chưa có tiến trình nào"
-
 @app.route("/upload", methods=["POST"])
 def upload_file():
     global process_message
@@ -131,7 +131,7 @@ def upload_file():
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
 
-    process_message = "✅ File đã tải lên thành công! Đang xử lý..."
+    process_message = "✅ File đã tải lên! Bắt đầu xử lý..."
     threading.Thread(target=schedule_videos, args=(file_path,)).start()
 
     return redirect(url_for("upload_page"))

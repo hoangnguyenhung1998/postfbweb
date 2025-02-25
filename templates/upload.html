@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <title>Đăng Video</title>
+</head>
+<body>
+    <h2>Đăng video lên: {{ page_name }}</h2>
+    
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Tải file lên</button>
+    </form>
+
+    <div id="progress"></div>
+
+    <script>
+        function updateProgress(message) {
+            document.getElementById("progress").innerHTML += "<p>" + message + "</p>";
+        }
+
+        async function checkStatus() {
+            const response = await fetch("/status");
+            const data = await response.json();
+            updateProgress(data.message);
+        }
+
+        setInterval(checkStatus, 3000);
+    </script>
+</body>
+</html>

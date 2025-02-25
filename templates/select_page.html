@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <title>Chọn Page Facebook</title>
+</head>
+<body>
+    <h2>Chọn Trang Facebook để đăng bài</h2>
+    <form method="POST">
+        <label for="page_id">Chọn Page:</label>
+        <select name="page_id" required>
+            {% for page in pages %}
+                <option value="{{ page.id }}">{{ page.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Tiếp tục</button>
+    </form>
+</body>
+</html>

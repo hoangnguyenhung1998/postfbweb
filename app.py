@@ -76,55 +76,106 @@ def dashboard():
 
     return render_template("dashboard.html", pages=pages)
 
+#chọn page
+
+@app.route("/select_page", methods=["GET", "POST"])
+def select_page():
+    if "access_token" not in session:
+        return redirect(url_for("login"))
+
+    access_token = session["access_token"]
+    pages_url = f"https://graph.facebook.com/v18.0/me/accounts?access_token={access_token}"
+
+    response = requests.get(pages_url)
+    pages = response.json().get("data", [])
+
+    if request.method == "POST":
+        session["selected_page_id"] = request.form["page_id"]
+        session["selected_page_name"] = request.form["page_name"]
+        return redirect(url_for("upload_page"))
+
+    return render_template("select_page.html", pages=pages)
+
+#upload page
+
+@app.route("/upload_page", methods=["GET", "POST"])
+def upload_page():
+    if "selected_page_id" not in session:
+        return redirect(url_for("select_page"))
+
+    return render_template("upload.html", page_name=session["selected_page_name"])
+
+
 # 📌 Xử lý Upload File Excel
+process_message = "Chưa có tiến trình nào"
+
 @app.route("/upload", methods=["POST"])
 def upload_file():
+    global process_message
+
     if "file" not in request.files:
-        flash("Không có file được chọn!", "error")
-        return redirect(url_for("dashboard"))
+        process_message = "⚠️ Không có file nào được chọn!"
+        return redirect(url_for("upload_page"))
 
     file = request.files["file"]
     if file.filename == "":
-        flash("Chưa chọn file!", "error")
-        return redirect(url_for("dashboard"))
+        process_message = "⚠️ Chưa chọn file!"
+        return redirect(url_for("upload_page"))
 
-    file_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
 
-    flash("Tải file thành công!", "success")
-
+    process_message = "✅ File đã tải lên thành công! Đang xử lý..."
     threading.Thread(target=schedule_videos, args=(file_path,)).start()
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("upload_page"))
+
+@app.route("/status")
+def status():
+    return {"message": process_message}
+
 
 # 📌 Tự động đăng video từ file Excel
 def schedule_videos(file_path):
+    global process_message
+
     df = pd.read_excel(file_path)
-    for _, row in df.iterrows():
+    page_id = session.get("selected_page_id")
+
+    if not page_id:
+        process_message = "⚠️ Chưa chọn Page!"
+        return
+
+    process_message = f"📌 Đang xử lý {len(df)} video..."
+
+    for index, row in df.iterrows():
         video_stt = str(int(row["STT"]))
         video_path = os.path.join(VIDEO_FOLDER, f"{video_stt}.mp4")
 
         if not os.path.exists(video_path):
-            print(f"❌ Không tìm thấy video {video_path}")
+            process_message = f"❌ Không tìm thấy video {video_path}"
             continue
 
         caption = row["Caption"]
-        page_id = str(row["Page ID"])
         post_time = row["Thời Gian Đăng"]
-
         post_datetime = datetime.strptime(post_time, "%Y-%m-%d %H:%M")
         now = datetime.now()
         wait_time = (post_datetime - now).total_seconds()
 
         if wait_time > 0:
+            process_message = f"⏳ Chờ {wait_time//60} phút để đăng video {video_stt}"
             time.sleep(wait_time)
 
         upload_video(video_path, caption, page_id)
 
+    process_message = "✅ Tất cả video đã đăng thành công!"
+
+
 # 📌 Đăng video lên Facebook
 def upload_video(video_path, caption, page_id):
+    global process_message
+
     access_token = session["access_token"]
-    
     file_size = os.path.getsize(video_path)
     start_url = f"https://graph.facebook.com/v18.0/{page_id}/video_reels"
 
@@ -138,7 +189,7 @@ def upload_video(video_path, caption, page_id):
     start_data = start_response.json()
 
     if "video_id" not in start_data or "upload_url" not in start_data:
-        print("❌ Lỗi khi lấy upload_url:", start_data)
+        process_message = f"❌ Lỗi khi lấy upload_url: {start_data}"
         return
 
     video_id = start_data["video_id"]
@@ -153,14 +204,17 @@ def upload_video(video_path, caption, page_id):
         "access_token": access_token,
         "video_id": video_id,
         "description": caption,
-        "published": "false",
+        "published": "true",
     }
 
     finish_response = requests.post(finish_url, data=finish_params)
     finish_data = finish_response.json()
 
     if "id" in finish_data:
-        print(f"✅ Đăng Reels thành công! Video ID: {finish_data['id']}")
+        process_message = f"✅ Đăng thành công Video ID: {finish_data['id']}"
+    else:
+        process_message = f"❌ Lỗi đăng video: {finish_data}"
+
 
 # 📌 Chạy Flask
 if __name__ == "__main__":

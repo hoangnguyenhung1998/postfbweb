@@ -43,9 +43,9 @@ def login():
 def facebook_callback():
     code = request.args.get("code")
     if not code:
-        return "Login failed", 400
+        return "❌ Đăng nhập thất bại", 400
 
-    token_url = f"https://graph.facebook.com/v18.0/oauth/access_token"
+    token_url = "https://graph.facebook.com/v18.0/oauth/access_token"
     params = {
         "client_id": FACEBOOK_APP_ID,
         "client_secret": FACEBOOK_APP_SECRET,
@@ -58,9 +58,9 @@ def facebook_callback():
 
     if "access_token" in data:
         session["access_token"] = data["access_token"]
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("select_page"))  # 👉 Chuyển hướng về trang chọn Page
 
-    return "Login failed", 400
+    return "❌ Đăng nhập thất bại", 400
 
 # 📌 Trang Dashboard
 @app.route("/dashboard")
